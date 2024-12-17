@@ -16,7 +16,7 @@
 
 1. Use this scene to practice setting up and rendering indoor environments.
 2. Familiarize yourself with the provided models and experiment with lighting, textures, and other scene enhancements.
-3. **Replace the camera model** and **substitute the GLUT teapot** with your own 3D models as you progress.
+3. **Remove the camera model** and **substitute the GLUT teapot** with your own 3D models as you progress.
 4. Convert the scene to the **programmable pipeline** and eliminate all **deprecated code**.
 
 ---
