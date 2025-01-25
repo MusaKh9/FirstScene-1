@@ -14,8 +14,11 @@ using namespace std;
 using namespace _3dgl;
 using namespace glm;
 
-// 3D models
+// 3D models //nice
 C3dglModel camera;
+C3dglModel table;
+C3dglModel lamp1;
+C3dglModel lamp2;
 
 // The View Matrix
 mat4 matrixView;
@@ -39,7 +42,9 @@ bool init()
 	glEnable(GL_LIGHT0);									// --- DEPRECATED
 
 	// load your 3D models here!
-	if (!camera.load("models\\camera.3ds")) return false;
+	if (!table.load("models\\table.obj")) return false;
+	if (!lamp1.load("models\\lamp.obj")) return false;
+	if (!lamp2.load("models\\lamp.obj")) return false;
 
 	// Initialise the View Matrix (initial position of the camera)
 	matrixView = rotate(mat4(1), radians(12.f), vec3(1, 0, 0));
@@ -71,12 +76,26 @@ void renderScene(mat4& matrixView, float time, float deltaTime)
 	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, rgbaGrey);	// --- DEPRECATED
 	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, rgbaGrey);	// --- DEPRECATED
 
-	// camera
+	//table
 	m = matrixView;
 	m = translate(m, vec3(-3.0f, 0, 0.0f));
 	m = rotate(m, radians(180.f), vec3(0.0f, 1.0f, 0.0f));
 	m = scale(m, vec3(0.04f, 0.04f, 0.04f));
-	camera.render(m);
+	table.render(m);
+
+	//lamp
+	m = matrixView;
+	m = translate(m, vec3(-24.9f, 30.4f, 13.4f));
+	m = rotate(m, radians(40.f), vec3(0.0f, 1.0f, 0.0f));
+	m = scale(m, vec3(0.09f, 0.09f, 0.09f));
+	lamp1.render(m);
+
+	m = matrixView;
+	m = translate(m, vec3(17.9f, 30.4f, -13.4f));
+	m = rotate(m, radians(190.f), vec3(0.0f, 1.0f, 0.0f));
+	m = scale(m, vec3(0.10f, 0.10f, 0.10f));
+	lamp2.render(m);
+
 
 	// setup materials - blue
 	GLfloat rgbaBlue[] = { 0.2f, 0.2f, 0.8f, 1.0f };		// --- DEPRECATED
