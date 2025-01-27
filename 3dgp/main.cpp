@@ -14,11 +14,39 @@ using namespace std;
 using namespace _3dgl;
 using namespace glm;
 
-// 3D models //nice
+// 3D models 
 C3dglModel camera;
 C3dglModel table;
 C3dglModel lamp1;
 C3dglModel lamp2;
+
+C3dglProgram program;
+
+C3dglShader vertexShader;
+C3dglShader fragmentShader;
+
+float vertices[] = 
+{
+-4, 0, -4, 4, 0, -4, 0, 7, 0, -4, 0, 4, 4, 0, 4, 0, 7, 0,
+-4, 0, -4, -4, 0, 4, 0, 7, 0, 4, 0, -4, 4, 0, 4, 0, 7, 0,
+-4, 0, -4, -4, 0, 4, 4, 0, -4, 4, 0, 4 
+};
+
+float normals[] = 
+{
+0, 4, -7, 0, 4, -7, 0, 4, -7, 0, 4, 7, 0, 4, 7, 0, 4, 7,
+-7, 4, 0, -7, 4, 0, -7, 4, 0, 7, 4, 0, 7, 4, 0, 7, 4, 0,
+0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0 
+};
+
+unsigned indices[] = 
+{
+0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 13, 14, 15 
+};
+
+unsigned vertexBuffer = 0;
+unsigned normalBuffer = 0;
+unsigned indexBuffer = 0;
 
 // The View Matrix
 mat4 matrixView;
@@ -37,21 +65,67 @@ bool init()
 	glShadeModel(GL_SMOOTH);	// smooth shading mode is the default one; try GL_FLAT here!
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);	// this is the default one; try GL_LINE!
 
-	// setup lighting
-	glEnable(GL_LIGHTING);									// --- DEPRECATED
-	glEnable(GL_LIGHT0);									// --- DEPRECATED
-
 	// load your 3D models here!
+	if (!vertexShader.create(GL_VERTEX_SHADER)) return false;
+	if (!vertexShader.loadFromFile("shaders/basic.vert")) return false;
+	if (!vertexShader.compile()) return false;
+
+	if (!fragmentShader.create(GL_FRAGMENT_SHADER)) return false;
+	if (!fragmentShader.loadFromFile("shaders/basic.frag")) return false;
+	if (!fragmentShader.compile()) return false;
+
+
+	if (!program.create()) return false;
+	if (!program.attach(vertexShader)) return false;
+	if (!program.attach(fragmentShader)) return false;
+	if (!program.link()) return false;
+	if (!program.use(true)) return false;
+
+	// glut additional setup
+	glutSetVertexAttribCoord3(program.getAttribLocation("aVertex"));
+	glutSetVertexAttribNormal(program.getAttribLocation("aNormal"));
+
+	// prepare vertex data
+	glGenBuffers(1, &vertexBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+
+	// prepare normal data
+	glGenBuffers(1, &normalBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(normals), normals, GL_STATIC_DRAW);
+
+
+	// prepare indices array
+	glGenBuffers(1, &indexBuffer);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
 	if (!table.load("models\\table.obj")) return false;
 	if (!lamp1.load("models\\lamp.obj")) return false;
 	if (!lamp2.load("models\\lamp.obj")) return false;
 
+	program.sendUniform("lightAmbient.color", vec3(0.1, 0.1, 0.1));
+	program.sendUniform("materialAmbient", vec3(1.0, 1.0, 1.0));
+	program.sendUniform("lightDir.direction", vec3(1.0, 0.5, 1.0));
+	program.sendUniform("lightDir.diffuse", vec3(0.2, 0.2, 0.2)); // dimmed white light
+
+	program.sendUniform("lightPoint1.position", vec3(-24.9f, 30.4f, 13.4f));
+	program.sendUniform("lightPoint1.diffuse", vec3(0.5, 0.5, 0.5));
+	program.sendUniform("lightPoint1.specular", vec3(1.0, 1.0, 1.0));
+
+	program.sendUniform("lightPoint2.position", vec3(1.1, 4.3, 1.0));
+	program.sendUniform("lightPoint2.diffuse", vec3(0.5, 0.5, 0.5));
+	program.sendUniform("lightPoint2.specular", vec3(1.0, 1.0, 1.0));
+
+	program.sendUniform("materialSpecular", vec3(0.6, 0.6, 1.0));
+	program.sendUniform("shininess", 10);
+
+
 	// Initialise the View Matrix (initial position of the camera)
 	matrixView = rotate(mat4(1), radians(12.f), vec3(1, 0, 0));
-	matrixView *= lookAt(
-		vec3(0.0, 5.0, 10.0),
-		vec3(0.0, 5.0, 0.0),
-		vec3(0.0, 1.0, 0.0));
+	matrixView *= lookAt(vec3(0.0, 5.0, 10.0),vec3(0.0, 5.0, 0.0),vec3(0.0, 1.0, 0.0));
 
 	// setup the screen background colour
 	glClearColor(0.18f, 0.25f, 0.22f, 1.0f);   // deep grey background
@@ -71,10 +145,50 @@ void renderScene(mat4& matrixView, float time, float deltaTime)
 {
 	mat4 m;
 
-	// setup materials - grey
-	GLfloat rgbaGrey[] = { 0.6f, 0.6f, 0.6f, 1.0f };		// --- DEPRECATED
-	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, rgbaGrey);	// --- DEPRECATED
-	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, rgbaGrey);	// --- DEPRECATED
+	program.sendUniform("material", vec3(0.6f, 0.6f, 0.6f));
+
+	m = matrixView;
+	m = translate(m, vec3(-3.0f, 0, 0.0f));
+	m = rotate(m, radians(180.f), vec3(0.0f, 1.0f, 0.0f));
+	m = scale(m, vec3(0.04f, 0.04f, 0.04f));
+	program.sendUniform("matrixModelView", m);
+
+	// Get Attribute Locations
+	GLuint attribVertex = program.getAttribLocation("aVertex");
+	GLuint attribNormal = program.getAttribLocation("aNormal");
+
+
+	// Enable vertex attribute arrays
+	glEnableVertexAttribArray(attribVertex);
+	glEnableVertexAttribArray(attribNormal);
+
+
+	// Bind (activate) the vertex buffer and set the pointer to it
+	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+	glVertexAttribPointer(attribVertex, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+
+	// Bind (activate) the normal buffer and set the pointer to it
+	glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
+	glVertexAttribPointer(attribNormal, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+
+	// Draw triangles – using index buffer
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+	glDrawElements(GL_TRIANGLES, 18, GL_UNSIGNED_INT, 0);
+
+
+	// Disable arrays
+	glDisableVertexAttribArray(attribVertex);
+	glDisableVertexAttribArray(attribNormal);
+
+
+	//bulb
+	m = matrixView;
+	m = translate(m, vec3(-24.9f, 30.4f, 13.4f));
+	m = scale(m, vec3(0.1f, 0.1f, 0.1f));
+	program.sendUniform("matrixModelView", m);
+	glutSolidSphere(1, 32, 32);
 
 	//table
 	m = matrixView;
@@ -116,20 +230,12 @@ void renderScene(mat4& matrixView, float time, float deltaTime)
 	m = scale(m, vec3(0.10f, 0.10f, 0.10f));
 	lamp2.render(m);
 
-
-	// setup materials - blue
-	GLfloat rgbaBlue[] = { 0.2f, 0.2f, 0.8f, 1.0f };		// --- DEPRECATED
-	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, rgbaBlue);	// --- DEPRECATED
-	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, rgbaBlue);	// --- DEPRECATED
-
 	// teapot
 	m = matrixView;
 	m = translate(m, vec3(15.0f, 0, 0.0f));
 	m = rotate(m, radians(120.f), vec3(0.0f, 1.0f, 0.0f));
 	// the GLUT objects require the Model View Matrix setup
-	glMatrixMode(GL_MODELVIEW);								// --- DEPRECATED
-	glLoadIdentity();										// --- DEPRECATED
-	glMultMatrixf((GLfloat*)&m);							// --- DEPRECATED
+	program.sendUniform("matrixModelView", m);
 	glutSolidTeapot(2.0);
 }
 
@@ -153,6 +259,8 @@ void onRender()
 		-pitch, vec3(1, 0, 0))	// switch the pitch on
 		* matrixView;
 
+	// setup View Matrix
+	program.sendUniform("matrixView", matrixView);
 	// render the scene objects
 	renderScene(matrixView, time, deltaTime);
 
@@ -171,9 +279,7 @@ void onReshape(int w, int h)
 	mat4 matrixProjection = perspective(radians(_fov), ratio, 0.02f, 1000.f);
 
 	// Setup the Projection Matrix
-	glMatrixMode(GL_PROJECTION);							// --- DEPRECATED
-	glLoadIdentity();										// --- DEPRECATED
-	glMultMatrixf((GLfloat*)&matrixProjection);				// --- DEPRECATED
+	program.sendUniform("matrixProjection", matrixProjection);
 }
 
 // Handle WASDQE keys
