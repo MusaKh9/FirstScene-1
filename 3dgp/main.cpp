@@ -81,7 +81,27 @@ void renderScene(mat4& matrixView, float time, float deltaTime)
 	m = translate(m, vec3(-3.0f, 0, 0.0f));
 	m = rotate(m, radians(180.f), vec3(0.0f, 1.0f, 0.0f));
 	m = scale(m, vec3(0.04f, 0.04f, 0.04f));
-	table.render(m);
+	table.render(1,m);
+	m = matrixView;
+	m = translate(m, vec3(-3.0f, 0, 0.0f));
+	m = rotate(m, radians(180.f), vec3(0.0f, 1.0f, 0.0f));
+	m = scale(m, vec3(0.04f, 0.04f, 0.04f));
+	table.render(0,m);
+	m = matrixView;
+	m = translate(m, vec3(3.0f, 0, 0.0f));
+	m = rotate(m, radians(90.f), vec3(0.0f, 1.0f, 0.0f));
+	m = scale(m, vec3(0.04f, 0.04f, 0.04f));
+	table.render(0, m);
+	m = matrixView;
+	m = translate(m, vec3(3.0f, 0, 0.0f));
+	m = rotate(m, radians(0.f), vec3(0.0f, 1.0f, 0.0f));
+	m = scale(m, vec3(0.04f, 0.04f, 0.04f));
+	table.render(0, m);
+	m = matrixView;
+	m = translate(m, vec3(-3.0f, 0, 0.0f));
+	m = rotate(m, radians(270.f), vec3(0.0f, 1.0f, 0.0f));
+	m = scale(m, vec3(0.04f, 0.04f, 0.04f));
+	table.render(0, m);
 
 	//lamp
 	m = matrixView;
