@@ -40,8 +40,8 @@ vec4 AmbientLight(AMBIENT light)
 // Calculate Ambient Light
 return vec4(materialAmbient * light.color, 1);
 }
-
 struct DIRECTIONAL
+
 {
 vec3 direction;
 vec3 diffuse;
