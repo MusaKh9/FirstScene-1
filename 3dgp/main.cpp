@@ -14,10 +14,14 @@ using namespace std;
 using namespace _3dgl;
 using namespace glm;
 
+<<<<<<< HEAD
 bool TurnOnlamp1;
 bool TurnOnlamp2;
 
 // 3D models 
+=======
+// 3D models //nice
+>>>>>>> parent of dcb7dda (Task4)
 C3dglModel camera;
 C3dglModel table;
 C3dglModel lamp1;
@@ -29,34 +33,6 @@ C3dglBitmap bm;
 GLuint oak;
 GLuint cloth;
 GLuint idTexNone;
-
-C3dglProgram program;
-
-C3dglShader vertexShader;
-C3dglShader fragmentShader;
-
-float vertices[] = 
-{
--4, 0, -4, 4, 0, -4, 0, 7, 0, -4, 0, 4, 4, 0, 4, 0, 7, 0,
--4, 0, -4, -4, 0, 4, 0, 7, 0, 4, 0, -4, 4, 0, 4, 0, 7, 0,
--4, 0, -4, -4, 0, 4, 4, 0, -4, 4, 0, 4 
-};
-
-float normals[] = 
-{
-0, 4, -7, 0, 4, -7, 0, 4, -7, 0, 4, 7, 0, 4, 7, 0, 4, 7,
--7, 4, 0, -7, 4, 0, -7, 4, 0, 7, 4, 0, 7, 4, 0, 7, 4, 0,
-0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0 
-};
-
-unsigned indices[] = 
-{
-0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 13, 14, 15 
-};
-
-unsigned vertexBuffer = 0;
-unsigned normalBuffer = 0;
-unsigned indexBuffer = 0;
 
 // The View Matrix
 mat4 matrixView;
@@ -75,7 +51,12 @@ bool init()
 	glShadeModel(GL_SMOOTH);	// smooth shading mode is the default one; try GL_FLAT here!
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);	// this is the default one; try GL_LINE!
 
+	// setup lighting
+	glEnable(GL_LIGHTING);									// --- DEPRECATED
+	glEnable(GL_LIGHT0);									// --- DEPRECATED
+
 	// load your 3D models here!
+<<<<<<< HEAD
 	if (!vertexShader.create(GL_VERTEX_SHADER)) return false;
 	if (!vertexShader.loadFromFile("shaders/basic.vert")) return false;
 	if (!vertexShader.compile()) return false;
@@ -129,11 +110,14 @@ bool init()
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 
+=======
+>>>>>>> parent of dcb7dda (Task4)
 	if (!table.load("models\\table.obj")) return false;
 	if (!lamp1.load("models\\lamp.obj")) return false;
 	if (!lamp2.load("models\\lamp.obj")) return false;
 	if (!vase.load("models\\vase.obj")) return false;
 
+<<<<<<< HEAD
 	
 	program.sendUniform("lightAmbient.color", vec3(0.1, 0.1, 0.1));
 
@@ -156,9 +140,14 @@ bool init()
 	program.sendUniform("shininess", 10);
 
 
+=======
+>>>>>>> parent of dcb7dda (Task4)
 	// Initialise the View Matrix (initial position of the camera)
 	matrixView = rotate(mat4(1), radians(12.f), vec3(1, 0, 0));
-	matrixView *= lookAt(vec3(0.0, 5.0, 10.0),vec3(0.0, 5.0, 0.0),vec3(0.0, 1.0, 0.0));
+	matrixView *= lookAt(
+		vec3(0.0, 5.0, 10.0),
+		vec3(0.0, 5.0, 0.0),
+		vec3(0.0, 1.0, 0.0));
 
 	// setup the screen background colour
 	glClearColor(0.18f, 0.25f, 0.22f, 1.0f);   // deep grey background
@@ -178,6 +167,7 @@ void renderScene(mat4& matrixView, float time, float deltaTime)
 {
 	mat4 m;
 
+<<<<<<< HEAD
 	//Pyramid 
 	m = matrixView;
 	m = translate(m, vec3(1.1f, 4.5f, 1.0f));
@@ -248,6 +238,12 @@ void renderScene(mat4& matrixView, float time, float deltaTime)
 	m = scale(m, vec3(0.09f, 0.09f, 0.09f));
 	program.sendUniform("matrixModelView", m);
 	glutSolidSphere(1, 32, 32);
+=======
+	// setup materials - grey
+	GLfloat rgbaGrey[] = { 0.6f, 0.6f, 0.6f, 1.0f };		// --- DEPRECATED
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, rgbaGrey);	// --- DEPRECATED
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, rgbaGrey);	// --- DEPRECATED
+>>>>>>> parent of dcb7dda (Task4)
 
 	m = matrixView;
 	m = translate(m, vec3(4.93f, 5.03f, 1.57f));
@@ -316,13 +312,21 @@ void renderScene(mat4& matrixView, float time, float deltaTime)
 	m = scale(m, vec3(0.02f, 0.02f, 0.02f));
 	lamp2.render(m);
 
+
+	// setup materials - blue
+	GLfloat rgbaBlue[] = { 0.2f, 0.2f, 0.8f, 1.0f };		// --- DEPRECATED
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, rgbaBlue);	// --- DEPRECATED
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, rgbaBlue);	// --- DEPRECATED
+
 	// teapot
 	m = matrixView;
 	m = translate(m, vec3(5.5f, 4.1f, 0.70f));
 	m = rotate(m, radians(120.f), vec3(0.0f, 1.0f, 0.0f));
 	m = scale(m, vec3(0.2f, 0.2f, 0.2f));
 	// the GLUT objects require the Model View Matrix setup
-	program.sendUniform("matrixModelView", m);
+	glMatrixMode(GL_MODELVIEW);								// --- DEPRECATED
+	glLoadIdentity();										// --- DEPRECATED
+	glMultMatrixf((GLfloat*)&m);							// --- DEPRECATED
 	glutSolidTeapot(2.0);
 }
 
@@ -346,9 +350,12 @@ void onRender()
 		-pitch, vec3(1, 0, 0))	// switch the pitch on
 		* matrixView;
 
+<<<<<<< HEAD
 	// setup View Matrix
 	program.sendUniform("matrixView", matrixView);
 
+=======
+>>>>>>> parent of dcb7dda (Task4)
 	// render the scene objects
 	renderScene(matrixView, time, deltaTime);
 
@@ -367,7 +374,9 @@ void onReshape(int w, int h)
 	mat4 matrixProjection = perspective(radians(_fov), ratio, 0.02f, 1000.f);
 
 	// Setup the Projection Matrix
-	program.sendUniform("matrixProjection", matrixProjection);
+	glMatrixMode(GL_PROJECTION);							// --- DEPRECATED
+	glLoadIdentity();										// --- DEPRECATED
+	glMultMatrixf((GLfloat*)&matrixProjection);				// --- DEPRECATED
 }
 
 // Handle WASDQE keys
