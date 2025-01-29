@@ -14,11 +14,21 @@ using namespace std;
 using namespace _3dgl;
 using namespace glm;
 
+bool TurnOnlamp1;
+bool TurnOnlamp2;
+
 // 3D models 
 C3dglModel camera;
 C3dglModel table;
 C3dglModel lamp1;
 C3dglModel lamp2;
+C3dglModel vase;
+
+C3dglBitmap bm;
+
+GLuint oak;
+GLuint cloth;
+GLuint idTexNone;
 
 C3dglProgram program;
 
@@ -81,6 +91,22 @@ bool init()
 	if (!program.link()) return false;
 	if (!program.use(true)) return false;
 
+	bm.load("models/oak.bmp", GL_RGBA);
+	if (!bm.getBits()) return false;
+	glActiveTexture(GL_TEXTURE0);
+	glGenTextures(1, &oak);
+	glBindTexture(GL_TEXTURE_2D, oak);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bm.getWidth(), bm.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, bm.getBits());
+
+	bm.load("models/cloth.bmp", GL_RGBA);
+	if (!bm.getBits()) return false;
+	glActiveTexture(GL_TEXTURE0);
+	glGenTextures(1, &cloth);
+	glBindTexture(GL_TEXTURE_2D, cloth);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bm.getWidth(), bm.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, bm.getBits());
+
 	// glut additional setup
 	glutSetVertexAttribCoord3(program.getAttribLocation("aVertex"));
 	glutSetVertexAttribNormal(program.getAttribLocation("aNormal"));
@@ -102,24 +128,31 @@ bool init()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
+
 	if (!table.load("models\\table.obj")) return false;
 	if (!lamp1.load("models\\lamp.obj")) return false;
 	if (!lamp2.load("models\\lamp.obj")) return false;
+	if (!vase.load("models\\vase.obj")) return false;
 
+	
 	program.sendUniform("lightAmbient.color", vec3(0.1, 0.1, 0.1));
+
+
+	program.sendUniform("lightEmissive", vec3(0, 0, 0));
+
 	program.sendUniform("materialAmbient", vec3(1.0, 1.0, 1.0));
 	program.sendUniform("lightDir.direction", vec3(1.0, 0.5, 1.0));
 	program.sendUniform("lightDir.diffuse", vec3(0.2, 0.2, 0.2)); // dimmed white light
 
-	program.sendUniform("lightPoint1.position", vec3(-24.9f, 30.4f, 13.4f));
-	program.sendUniform("lightPoint1.diffuse", vec3(0.5, 0.5, 0.5));
-	program.sendUniform("lightPoint1.specular", vec3(1.0, 1.0, 1.0));
+	program.sendUniform("lightPoint1.position", vec3(1.22f, 5.0f, -1.4f));
+	program.sendUniform("lightPoint1.diffuse", vec3(0, 0, 0));
+	program.sendUniform("lightPoint1.specular", vec3(0, 0, 0));
 
-	program.sendUniform("lightPoint2.position", vec3(1.1, 4.3, 1.0));
-	program.sendUniform("lightPoint2.diffuse", vec3(0.5, 0.5, 0.5));
-	program.sendUniform("lightPoint2.specular", vec3(1.0, 1.0, 1.0));
+	program.sendUniform("lightPoint2.position", vec3(4.93f, 5.03f, 1.57f));
+	program.sendUniform("lightPoint2.diffuse", vec3(0, 0, 0));
+	program.sendUniform("lightPoint2.specular", vec3(0, 0, 0));
 
-	program.sendUniform("materialSpecular", vec3(0.6, 0.6, 1.0));
+	program.sendUniform("materialSpecular", vec3(0, 0, 0));
 	program.sendUniform("shininess", 10);
 
 
@@ -145,12 +178,11 @@ void renderScene(mat4& matrixView, float time, float deltaTime)
 {
 	mat4 m;
 
-	program.sendUniform("material", vec3(0.6f, 0.6f, 0.6f));
-
+	//Pyramid 
 	m = matrixView;
-	m = translate(m, vec3(-3.0f, 0, 0.0f));
-	m = rotate(m, radians(180.f), vec3(0.0f, 1.0f, 0.0f));
-	m = scale(m, vec3(0.04f, 0.04f, 0.04f));
+	m = translate(m, vec3(1.1f, 4.5f, 1.0f));
+	m = rotate(m, radians(180.f), vec3(0.0f, 1.0f, 90.0f));
+	m = scale(m, vec3(0.1f, 0.1f, 0.1f));
 	program.sendUniform("matrixModelView", m);
 
 	// Get Attribute Locations
@@ -182,58 +214,113 @@ void renderScene(mat4& matrixView, float time, float deltaTime)
 	glDisableVertexAttribArray(attribVertex);
 	glDisableVertexAttribArray(attribNormal);
 
+	if (TurnOnlamp1)
+	{
+		cout << "lamp1" << endl;
+		program.sendUniform("lightPoint1.diffuse", vec3(1, 1, 1));
+		program.sendUniform("lightPoint1.specular", vec3(1.0, 1.0, 1.0));
+	}
+	else
+	{
+
+
+		program.sendUniform("lightPoint1.diffuse", vec3(0, 0, 0));
+		program.sendUniform("lightPoint1.specular", vec3(0, 0, 0));
+	}
+
+	if (TurnOnlamp2)
+	{
+		cout << "lamp2" << endl;
+		program.sendUniform("lightPoint2.diffuse", vec3(1, 1, 1));
+		program.sendUniform("lightPoint2.specular", vec3(1.0, 1.0, 1.0));
+	}
+	else
+	{
+
+		program.sendUniform("lightPoint2.diffuse", vec3(0, 0, 0));
+		program.sendUniform("lightPoint2.specular", vec3(0, 0, 0));
+	}
+
 
 	//bulb
 	m = matrixView;
-	m = translate(m, vec3(-24.9f, 30.4f, 13.4f));
-	m = scale(m, vec3(0.1f, 0.1f, 0.1f));
+	m = translate(m, vec3(1.22f, 5.0f, -1.4f));
+	m = scale(m, vec3(0.09f, 0.09f, 0.09f));
 	program.sendUniform("matrixModelView", m);
 	glutSolidSphere(1, 32, 32);
 
+	m = matrixView;
+	m = translate(m, vec3(4.93f, 5.03f, 1.57f));
+	m = scale(m, vec3(0.09f, 0.09f, 0.09f));
+	program.sendUniform("matrixModelView", m);
+	glutSolidSphere(1, 32, 32);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, oak);
+
 	//table
 	m = matrixView;
-	m = translate(m, vec3(-3.0f, 0, 0.0f));
+	m = translate(m, vec3(3.0f, 0, 0.0f));
 	m = rotate(m, radians(180.f), vec3(0.0f, 1.0f, 0.0f));
-	m = scale(m, vec3(0.04f, 0.04f, 0.04f));
+	m = scale(m, vec3(0.005f, 0.005f, 0.005f));
 	table.render(1,m);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, cloth);
+
+	//chairs
 	m = matrixView;
-	m = translate(m, vec3(-3.0f, 0, 0.0f));
+	m = translate(m, vec3(3.0f, 0, 0.0f));
 	m = rotate(m, radians(180.f), vec3(0.0f, 1.0f, 0.0f));
-	m = scale(m, vec3(0.04f, 0.04f, 0.04f));
+	m = scale(m, vec3(0.005f, 0.005f, 0.005f));
 	table.render(0,m);
 	m = matrixView;
 	m = translate(m, vec3(3.0f, 0, 0.0f));
 	m = rotate(m, radians(90.f), vec3(0.0f, 1.0f, 0.0f));
-	m = scale(m, vec3(0.04f, 0.04f, 0.04f));
+	m = scale(m, vec3(0.005f, 0.005f, 0.005f));
 	table.render(0, m);
 	m = matrixView;
 	m = translate(m, vec3(3.0f, 0, 0.0f));
 	m = rotate(m, radians(0.f), vec3(0.0f, 1.0f, 0.0f));
-	m = scale(m, vec3(0.04f, 0.04f, 0.04f));
+	m = scale(m, vec3(0.005f, 0.005f, 0.005f));
 	table.render(0, m);
 	m = matrixView;
-	m = translate(m, vec3(-3.0f, 0, 0.0f));
+	m = translate(m, vec3(3.0f, 0, 0.0f));
 	m = rotate(m, radians(270.f), vec3(0.0f, 1.0f, 0.0f));
-	m = scale(m, vec3(0.04f, 0.04f, 0.04f));
+	m = scale(m, vec3(0.005f, 0.005f, 0.005f));
 	table.render(0, m);
+
+	glGenTextures(1, &idTexNone);
+	glBindTexture(GL_TEXTURE_2D, idTexNone);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	BYTE bytes[] = { 255, 255, 255 };
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_BGR, GL_UNSIGNED_BYTE, &bytes);
+
+	//vase
+	m = matrixView;
+	m = translate(m, vec3(3.0f, 3.8f, 0.0f));
+	m = rotate(m, radians(-20.0f), vec3(0.0f, 1.0f, 0.0f));
+	m = scale(m, vec3(0.09f, 0.09f, 0.091f));
+	vase.render(m);
 
 	//lamp
 	m = matrixView;
-	m = translate(m, vec3(-24.9f, 30.4f, 13.4f));
-	m = rotate(m, radians(40.f), vec3(0.0f, 1.0f, 0.0f));
-	m = scale(m, vec3(0.09f, 0.09f, 0.09f));
+	m = translate(m, vec3(5.6f, 3.8f, 1.8f));
+	m = rotate(m, radians(-20.0f), vec3(0.0f, 1.0f, 0.0f));
+	m = scale(m, vec3(0.02f, 0.02f, 0.02f));
 	lamp1.render(m);
 
 	m = matrixView;
-	m = translate(m, vec3(17.9f, 30.4f, -13.4f));
-	m = rotate(m, radians(190.f), vec3(0.0f, 1.0f, 0.0f));
-	m = scale(m, vec3(0.10f, 0.10f, 0.10f));
+	m = translate(m, vec3(0.5f, 3.8f, -1.4f));
+	m = rotate(m, radians(180.0f), vec3(0.0f, 1.0f, 0.0f));
+	m = scale(m, vec3(0.02f, 0.02f, 0.02f));
 	lamp2.render(m);
 
 	// teapot
 	m = matrixView;
-	m = translate(m, vec3(15.0f, 0, 0.0f));
+	m = translate(m, vec3(5.5f, 4.1f, 0.70f));
 	m = rotate(m, radians(120.f), vec3(0.0f, 1.0f, 0.0f));
+	m = scale(m, vec3(0.2f, 0.2f, 0.2f));
 	// the GLUT objects require the Model View Matrix setup
 	program.sendUniform("matrixModelView", m);
 	glutSolidTeapot(2.0);
@@ -261,6 +348,7 @@ void onRender()
 
 	// setup View Matrix
 	program.sendUniform("matrixView", matrixView);
+
 	// render the scene objects
 	renderScene(matrixView, time, deltaTime);
 
@@ -293,6 +381,8 @@ void onKeyDown(unsigned char key, int x, int y)
 	case 'd': _acc.x = -accel; break;
 	case 'e': _acc.y = accel; break;
 	case 'q': _acc.y = -accel; break;
+	case '1': if (!TurnOnlamp1) TurnOnlamp1 = true; else if (TurnOnlamp1) TurnOnlamp1 = false; break;
+	case '2': if (!TurnOnlamp2) TurnOnlamp2 = true; else if (TurnOnlamp2) TurnOnlamp2 = false; break;
 	}
 }
 

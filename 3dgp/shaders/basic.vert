@@ -19,17 +19,21 @@ uniform float shininess;
 in vec3 aVertex;
 in vec3 aNormal;
 
+in vec2 aTexCoord;
+
 
 out vec4 color;
 
 out vec4 position;
 out vec3 normal;
+out vec2 texCoord0;
+out vec2 texCoord1; 
 
 struct AMBIENT
 {
 vec3 color;
 };
-uniform AMBIENT lightAmbient;
+uniform AMBIENT lightAmbient , lightEmissive;
 
 vec4 AmbientLight(AMBIENT light)
 {
@@ -66,5 +70,10 @@ color = vec4(0, 0, 0, 1);
 normal = normalize(mat3(matrixModelView) * aNormal);
 
 color += AmbientLight(lightAmbient);
+color += AmbientLight(lightEmissive);
 color += DirectionalLight(lightDir);
+ 
+ texCoord0 = aTexCoord;
+
+ texCoord1 = aTexCoord;
 }

@@ -15,8 +15,14 @@ uniform float shininess;
 // View Matrix
 uniform mat4 matrixView;
 
+uniform sampler2D texture0;
+uniform sampler2D texture1;
+
 in vec4 position;
 in vec3 normal;
+
+in vec2 texCoord0;
+in vec2 texCoord1;
 
 struct POINT
 {
@@ -52,4 +58,7 @@ outColor = color;
 
 outColor += PointLight(lightPoint1);
 outColor += PointLight(lightPoint2);
+
+outColor += texture(texture0, texCoord0);
+outColor += texture(texture1, texCoord1);
 }
